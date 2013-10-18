@@ -22,9 +22,7 @@ namespace edvo {
             ~RGBDVONode();
 
         protected:
-            void publishPose( const cvt::Matrix4f& pose,
-                              const ros::Time& t,
-                              const std::string& frameId );
+            void publishPose( const cvt::Matrix4f& pose, const ros::Time& t );
 
         private:
             typedef DirectVisualOdometry<LinearizerType, OptimizerType> DVOType;
@@ -52,8 +50,9 @@ namespace edvo {
         RGBDSubscriber(),
         _dvo( 0 )
     {
+        ros::NodeHandle nh( "~" );
         _transform.header.frame_id = "/world";
-        _transform.child_frame_id  = "/rgbd_vo";
+        _transform.child_frame_id  = nh.getNamespace();
 
         _server.setCallback( boost::bind( &RGBDVONode<OptimizerType, LinearizerType>::configCallback, this, _1, _2 ) );
     }
@@ -62,8 +61,9 @@ namespace edvo {
     inline RGBDVONode<OptimizerType, LinearizerType>::RGBDVONode( const cvt::Matrix3f& calib ) :
         RGBDSubscriber( calib )
     {
+        ros::NodeHandle nh( "~" );
         _transform.header.frame_id = "/world";
-        _transform.child_frame_id  = "/rgbd_vo";
+        _transform.child_frame_id  = nh.getNamespace();
     }
 
     template <class OptimizerType, class LinearizerType>
@@ -88,13 +88,12 @@ namespace edvo {
         depth.convert( depthf, cvt::IFormat::GRAY_FLOAT );
 
         cvt::Matrix4f pose = _dvo->computeMotion( grayf, depthf );
-        publishPose( pose, _rgbHeader.stamp, "/direct_vo" );
+        publishPose( pose, _rgbHeader.stamp );
     }
 
     template <class OptimizerType, class LinearizerType>
     inline void RGBDVONode<OptimizerType, LinearizerType>::publishPose( const cvt::Matrix4f& pose,
-                                                                        const ros::Time& t,
-                                                                        const std::string& frameId )
+                                                                        const ros::Time& t )
     {
         cvt::Quaternionf q( pose.toMatrix3() );
         _transform.transform.translation.x = pose[ 0 ][ 3 ];
@@ -107,7 +106,6 @@ namespace edvo {
         _transform.transform.rotation.z = q.z;
 
         _transform.header.stamp = t;
-        _transform.child_frame_id = frameId;
         _tf.sendTransform( _transform );
     }
 
