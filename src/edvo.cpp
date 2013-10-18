@@ -3,44 +3,88 @@
 
 #include <RGBDVONode.h>
 #include <cvt/vision/CameraCalibration.h>
+#include <cvt/vision/rgbdvo/GNOptimizer.h>
+#include <cvt/vision/rgbdvo/LMOptimizer.h>
 
-using namespace cvt_ros;
+using namespace edvo;
+
+template <class Linearizer>
+void runWithLinearizerType( ros::NodeHandle& nh )
+{
+    typedef typename Linearizer::AlignDataType AlignDataType;
+    std::string loss, optimizer;
+    nh.param<std::string>( "loss", loss, "Huber" );
+    nh.param<std::string>( "optimizer", optimizer, "GaussNewton" );
+
+    if( optimizer == "LevenbergMarquardt" ){
+        // LevMar
+        ROS_INFO( "Optimizer -> Levenberg Marquardt" );
+        if( loss == "Huber" ){
+            ROS_INFO( "Loss Function -> Huber" );
+            typedef cvt::LMOptimizer<AlignDataType, cvt::Huberf> OType;
+            RGBDVONode<OType, Linearizer> voNode;
+            ros::spin();
+        } else {
+            ROS_INFO( "Loss Function -> Tukey" );
+            typedef cvt::LMOptimizer<AlignDataType, cvt::Tukeyf> OType;
+            RGBDVONode<OType, Linearizer> voNode;
+            ros::spin();
+        }
+    } else {
+        ROS_INFO( "Optimizer -> Gauss Newton" );
+        if( loss == "Huber" ){
+            ROS_INFO( "Loss Function -> Huber" );
+            typedef cvt::GNOptimizer<AlignDataType, cvt::Huberf> OType;
+            RGBDVONode<OType, Linearizer> voNode;
+            ros::spin();
+        } else {
+            // Tukey
+            ROS_INFO( "Loss Function -> Tukey" );
+            typedef cvt::GNOptimizer<AlignDataType, cvt::Tukeyf> OType;
+            RGBDVONode<OType, Linearizer> voNode;
+            ros::spin();
+        }
+    }
+}
+
+template <class WarpType>
+void runWithWarpType( ros::NodeHandle& nh )
+{
+    typedef cvt::AlignmentData<WarpType>  AlignDataType;
+    std::string linearizer;
+    nh.param<std::string>( "linearizer", linearizer, "IC" );
+
+    if( linearizer == "IC" ){
+        ROS_INFO( "Linearizer -> IC" );
+        runWithLinearizerType<cvt::InvCompLinearizer<AlignDataType> >( nh );
+    } else if( linearizer == "FC" ){
+        ROS_INFO( "Linearizer -> FC" );
+        runWithLinearizerType<cvt::FwdCompLinearizer<AlignDataType> >( nh );
+    } else {
+        // ESM
+        ROS_INFO( "Linearizer -> ESM" );
+        runWithLinearizerType<cvt::ESMLinearizer<AlignDataType> >( nh );
+    }
+}
+
+void run( ros::NodeHandle& nh )
+{
+    std::string warp;
+    nh.param<std::string>( "warp", warp, "AI" );
+    if( warp == "AI" ){
+        ROS_INFO( "Warp -> Affine Illumination" );
+        runWithWarpType<cvt::AffineLightingWarp>( nh );
+    } else {
+        ROS_INFO( "Warp -> Standard" );
+        runWithWarpType<cvt::StandardWarp>( nh );
+    }
+}
 
 int main( int argc, char* argv[] )
 {
-    ros::init( argc, argv, "direct_vo" );
+    ros::init( argc, argv, "edvo" );
 
     ros::NodeHandle nh( "~" );
-
-    bool useCalibFile = false;
-    std::string filename = "xtion_rgb.xml";
-
-    nh.param<std::string>( "calib_file", filename, filename );
-    nh.param<bool>( "use_calib_file", useCalibFile, useCalibFile );
-
-    ROS_INFO( "Using Calibration file: %d", useCalibFile );
-
-    RGBDVONode* voNode = 0;
-
-    if( useCalibFile ){
-        try {
-            // load calibration
-            cvt::String resourcePath;
-            resourcePath.sprintf( "%s/resources/%s", ros::package::getPath( "cvt_ros" ).c_str(), filename.c_str() );
-            ROS_INFO( "Calibration file: %s", resourcePath.c_str() );
-            cvt::CameraCalibration calib;
-            calib.load( resourcePath.c_str() );
-            voNode = new RGBDVONode( calib.intrinsics() );
-        } catch( cvt::Exception& e ){
-            ROS_ERROR( "%s", e.what() );
-        }
-
-    } else {
-        voNode = new RGBDVONode();
-    }
-
-    ros::spin();
-    delete voNode;
-
+    run( nh );
     return 0;
 }

@@ -1,18 +1,17 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(edvo)
 
-
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS 
-    roscpp
-    cvt_ros
-    dynamic_reconfigure)
+find_package(catkin REQUIRED COMPONENTS roscpp cvt_ros dynamic_reconfigure)
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(CVT REQUIRED)
+
+add_definitions( -DBOOST_SIGNALS_NO_DEPRECATION_WARNING )
+set( CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-O3" )
 
 include_directories(
     include
@@ -21,6 +20,9 @@ include_directories(
     ${CVT_INCLUDE_DIRS}
     ${Boost_INCLUDE_DIRS}
 )
+
+# generate dynamic reconfigure configs
+generate_dynamic_reconfigure_options( cfg/EDVO.cfg )
 
 ###################################
 ## catkin specific configuration ##
@@ -54,7 +56,7 @@ add_executable( edvo
     src/DirectVisualOdometry.h
 )
 target_link_libraries( edvo ${CVT_LIBRARIES} ${catkin_LIBRARIES} )
-# add_dependencies( edvo ${PROJECT_NAME}_gencfg )
+add_dependencies( edvo ${PROJECT_NAME}_gencfg )
 
 
 #############
