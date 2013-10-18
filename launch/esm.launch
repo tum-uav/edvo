@@ -1,0 +1,10 @@
+<launch>
+    <!-- TODO: param for camera mapping -->
+	<node name="edvo_ic" pkg="edvo" type="edvo">
+        <remap from="camera"        to="rgbd_camera"/>
+		<param name="warp"	        value="AI"/> <!-- affine illumination + SE3 -->
+		<param name="linearizer"	value="ESM"/> <!-- inverse compositional -->
+		<param name="loss"	        value="Huber"/> <!-- loss function -->
+		<param name="optimizer"     value="GaussNewton"/> <!-- GaussNewton -->
+	</node>
+</launch>
