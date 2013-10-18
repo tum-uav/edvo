@@ -56,7 +56,7 @@ add_executable( edvo
     src/DirectVisualOdometry.h
 )
 target_link_libraries( edvo ${CVT_LIBRARIES} ${catkin_LIBRARIES} )
-add_dependencies( edvo ${PROJECT_NAME}_gencfg )
+add_dependencies( edvo ${catkin_EXPORTED_TARGETS} )
 
 
 #############
