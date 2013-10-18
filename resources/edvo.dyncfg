@@ -1,0 +1,21 @@
+!!python/object/new:dynamic_reconfigure.encoding.Config
+dictitems:
+  depth_to_meter: 1000.0
+  gradient_threshold: 0.05
+  information_selection_thresh: 0.1
+  optimizer_cost_stop: 0.007
+  optimizer_iterations: 8
+  optimizer_min_p_upd: 0.00001
+  optimizer_reg_alpha: false
+  optimizer_use_regularizer: false
+  pyramid_octaves: 4
+  pyramid_scale: 0.6
+  ref_upd_max_rot_dist: 3.0
+  ref_upd_max_ssd: 0.04
+  ref_upd_max_t_dist: 0.5
+  ref_upd_min_pix_perc: 0.9
+  reference_max_depth: 10.0
+  reference_min_depth: 0.1
+  reset: false
+  use_info_select: false
+state: []
