@@ -1,6 +1,6 @@
 <launch>
     <!-- TODO: param for camera mapping -->
-	<node name="edvo_ic" pkg="edvo" type="edvo">
+	<node name="edvo_esm" pkg="edvo" type="edvo">
         <remap from="camera"        to="rgbd_camera"/>
 		<param name="warp"	        value="AI"/> <!-- affine illumination + SE3 -->
 		<param name="linearizer"	value="ESM"/> <!-- inverse compositional -->
